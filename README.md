@@ -1,50 +1,193 @@
-# Building a Remote MCP Server on Cloudflare (Without Auth)
+# Trello MCP Server on Cloudflare Workers
 
-This example allows you to deploy a remote MCP server that doesn't require authentication on Cloudflare Workers. 
+A Model Context Protocol (MCP) server that provides comprehensive Trello integration, deployed on Cloudflare Workers with secure authentication.
 
-## Get started: 
+## 🚀 Live Deployment
 
-[![Deploy to Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/ai/tree/main/demos/remote-mcp-authless)
+**Server URL**: `https://trello-mcp-cloudflare-v2.matthias-51d.workers.dev`
 
-This will deploy your MCP server to a URL like: `remote-mcp-server-authless.<your-account>.workers.dev/sse`
+**Endpoints**:
+- **SSE Transport**: `/sse` (Server-Sent Events for persistent connections)
+- **HTTP Transport**: `/mcp` (JSON-RPC over HTTP for simple requests)
 
-Alternatively, you can use the command line below to get the remote MCP Server created on your local machine:
+## 🔧 Features
+
+### Trello Operations Supported:
+- **Boards**: List, get, create boards
+- **Lists**: Get lists, create lists
+- **Cards**: Get, create, update, move, delete cards
+- **Comments**: Add and retrieve card comments
+- **Labels**: Manage board labels and card labels
+- **Members**: Manage board members and card assignments
+- **Checklists**: Create checklists and manage checklist items
+- **Search**: Search cards across your Trello workspace
+- **Attachments**: Attach URLs to cards
+
+## 🔐 Authentication
+
+The server uses secure authentication with environment variables:
+
+### Required Environment Variables:
+- `TRELLO_API_KEY`: Your Trello API key ([Get it here](https://trello.com/app-key))
+- `TRELLO_TOKEN`: Your Trello token ([Generate here](https://trello.com/app-key))
+- `SHARED_SECRET`: Shared secret for MCP authentication
+
+### Authentication Methods:
+1. **URL Parameter**: `?secret=your_shared_secret`
+2. **Authorization Header**: `Authorization: Bearer your_shared_secret`
+
+## 📦 Setup & Deployment
+
+### Prerequisites:
+- Node.js 18+
+- Cloudflare account
+- Trello API credentials
+
+### Local Development:
 ```bash
-npm create cloudflare@latest -- my-mcp-server --template=cloudflare/ai/demos/remote-mcp-authless
+# Clone the repository
+git clone https://github.com/M-Kampmann/trello-mcp-cloudflare.git
+cd trello-mcp-cloudflare
+
+# Install dependencies
+npm install
+
+# Copy environment variables template
+cp .dev.vars.example .dev.vars
+
+# Edit .dev.vars with your actual credentials
+# TRELLO_API_KEY=your_api_key
+# TRELLO_TOKEN=your_token
+# SHARED_SECRET=your_secret
+
+# Start local development server
+npm run dev
 ```
 
-## Customizing your MCP Server
+### Deploy to Cloudflare:
+```bash
+# Set production secrets
+wrangler secret put TRELLO_API_KEY
+wrangler secret put TRELLO_TOKEN
+wrangler secret put SHARED_SECRET
 
-To add your own [tools](https://developers.cloudflare.com/agents/model-context-protocol/tools/) to the MCP server, define each tool inside the `init()` method of `src/index.ts` using `this.server.tool(...)`. 
+# Deploy to Cloudflare Workers
+npm run deploy
+```
 
-## Connect to Cloudflare AI Playground
+## 🔌 Usage Examples
 
-You can connect to your MCP server from the Cloudflare AI Playground, which is a remote MCP client:
+### Test Authentication:
+```bash
+# Test with correct secret (should work)
+curl "https://trello-mcp-cloudflare-v2.matthias-51d.workers.dev/sse?secret=your_secret"
 
-1. Go to https://playground.ai.cloudflare.com/
-2. Enter your deployed MCP server URL (`remote-mcp-server-authless.<your-account>.workers.dev/sse`)
-3. You can now use your MCP tools directly from the playground!
+# Test with wrong secret (should return 401)
+curl "https://trello-mcp-cloudflare-v2.matthias-51d.workers.dev/sse?secret=wrong_secret"
+```
 
-## Connect Claude Desktop to your MCP server
+### MCP Client Integration:
+```bash
+# Using mcp-remote proxy
+npx mcp-remote https://trello-mcp-cloudflare-v2.matthias-51d.workers.dev/sse?secret=your_secret
+```
 
-You can also connect to your remote MCP server from local MCP clients, by using the [mcp-remote proxy](https://www.npmjs.com/package/mcp-remote). 
+## 🖥️ Claude Desktop Integration
 
-To connect to your MCP server from Claude Desktop, follow [Anthropic's Quickstart](https://modelcontextprotocol.io/quickstart/user) and within Claude Desktop go to Settings > Developer > Edit Config.
-
-Update with this configuration:
+Add to your Claude Desktop configuration (`claude_desktop_config.json`):
 
 ```json
 {
   "mcpServers": {
-    "calculator": {
+    "trello": {
       "command": "npx",
       "args": [
         "mcp-remote",
-        "http://localhost:8787/sse"  // or remote-mcp-server-authless.your-account.workers.dev/sse
+        "https://trello-mcp-cloudflare-v2.matthias-51d.workers.dev/sse?secret=your_shared_secret"
       ]
     }
   }
 }
 ```
 
-Restart Claude and you should see the tools become available. 
+## 🛠️ Development
+
+### Project Structure:
+```
+├── src/
+│   └── index.ts          # Main MCP server implementation
+├── wrangler.toml         # Cloudflare Workers configuration
+├── package.json          # Dependencies and scripts
+├── .dev.vars.example     # Environment variables template
+└── README.md            # This file
+```
+
+### Available Tools:
+- `listBoards` - Get all accessible boards
+- `getBoard` - Get specific board details
+- `createBoard` - Create a new board
+- `getLists` - Get lists from a board
+- `createList` - Create a new list
+- `getCards` - Get cards from a list
+- `getBoardCards` - Get all cards from a board
+- `getCard` - Get specific card details
+- `createCard` - Create a new card
+- `updateCard` - Update card properties
+- `moveCard` - Move card between lists
+- `deleteCard` - Delete a card
+- `addComment` - Add comment to card
+- `getComments` - Get card comments
+- `addLabel` - Add label to card
+- `removeLabel` - Remove label from card
+- `getBoardLabels` - Get board labels
+- `createLabel` - Create new label
+- `addMemberToCard` - Assign member to card
+- `removeMemberFromCard` - Remove member from card
+- `getBoardMembers` - Get board members
+- `createChecklist` - Create checklist on card
+- `addChecklistItem` - Add item to checklist
+- `getCardChecklists` - Get card checklists
+- `searchCards` - Search cards by query
+- `attachUrlToCard` - Attach URL to card
+- `getCurrentUser` - Get current user info
+- `archiveListCards` - Archive all cards in list
+
+## 🔒 Security
+
+- All API credentials are stored as Cloudflare Workers secrets
+- Authentication required for all endpoints
+- CORS properly configured for web clients
+- No sensitive data exposed in logs
+
+## 📝 License
+
+MIT License - see LICENSE file for details
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 🐛 Troubleshooting
+
+### Common Issues:
+
+**Authentication Errors**:
+- Verify your `SHARED_SECRET` is set correctly
+- Check that Trello API credentials are valid
+- Ensure you're using the correct URL parameter format
+
+**Connection Issues**:
+- Verify the server URL is accessible
+- Check that CORS headers are properly set
+- Test with curl first before using MCP clients
+
+**Deployment Issues**:
+- Ensure all secrets are set in Cloudflare Workers
+- Check wrangler.toml configuration
+- Verify Node.js compatibility settings
+
+For more help, check the [Cloudflare Workers documentation](https://developers.cloudflare.com/workers/) or [MCP specification](https://modelcontextprotocol.io/).
