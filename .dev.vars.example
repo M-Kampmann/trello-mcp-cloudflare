@@ -1,0 +1,16 @@
+# Trello MCP Server - Local Development Variables
+# Copy this file to .dev.vars and fill in your actual values
+
+# Required: Your Trello API Key
+# Get it from: https://trello.com/app-key
+TRELLO_API_KEY=your_trello_api_key_here
+
+# Required: Your Trello Token
+# Generate from: https://trello.com/app-key (click "Generate a Token")
+# Make sure to grant read/write permissions
+TRELLO_TOKEN=your_trello_token_here
+
+# Optional: Shared secret for MCP authentication
+# Use a strong random string for production
+# Example: openssl rand -hex 32
+SHARED_SECRET=optional_shared_secret_for_mcp_auth

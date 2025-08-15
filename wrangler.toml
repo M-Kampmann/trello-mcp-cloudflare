@@ -1,0 +1,44 @@
+# Trello MCP Server Configuration
+name = "trello-mcp-cloudflare-v2"
+main = "src/index.ts"
+compatibility_date = "2025-03-10"
+compatibility_flags = ["nodejs_compat"]
+
+# Enable observability for debugging
+[observability]
+enabled = true
+
+# Environment variables (non-sensitive)
+[vars]
+# Add any non-sensitive configuration here
+
+# Secrets (sensitive data) - Set these using wrangler secret put
+# TRELLO_API_KEY - Your Trello API key
+# TRELLO_TOKEN - Your Trello token
+# SHARED_SECRET - Optional MCP shared secret for authentication
+
+# Development settings
+[dev]
+port = 8787
+local_protocol = "http"
+
+# Optional: Configure custom domains
+# [[routes]]
+# pattern = "trello-mcp.example.com/*"
+# zone_name = "example.com"
+
+# Optional: Configure rate limiting
+# [[unsafe.bindings]]
+# name = "RATE_LIMITER"
+# type = "ratelimit"
+# namespace_id = "1234"
+# simple = { limit = 10, period = 60 }
+
+# Durable Object for MCP state
+[[durable_objects.bindings]]
+name = "MCP_OBJECT"
+class_name = "MyMCP"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["MyMCP"]
